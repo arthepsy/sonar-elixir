@@ -103,6 +103,7 @@ public class ElixirMeasureSensor implements Sensor {
                 docMatcher.reset(line);
                 boolean inDoc = docMatcher.find();
                 if (inDoc) {
+                    commentLineCount++;
                     String docText = docMatcher.group(2).trim();
                     if (! (StringUtils.equalsIgnoreCase(docText, "false") || StringUtils.equalsIgnoreCase(docText, "nil"))) {
                         switch (docMatcher.group(1)) {
@@ -119,18 +120,12 @@ public class ElixirMeasureSensor implements Sensor {
                 }
                 heredocMatcher.reset(line);
                 if (heredocMatcher.find()) {
-                    if (inDoc) {
-                        commentLineCount++;
-                    }
                     while (i < lineCount - 1) {
                         if (inDoc) {
                             commentLineCount++;
                         }
                         i++;
                         line = lines.get(i);
-                        if (StringUtils.isBlank(line)) {
-                            emptyLineCount++;
-                        }
                         if (line.matches("^\\s*\"\"\"\\s*$")) {
                             break;
                         }

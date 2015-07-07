@@ -40,6 +40,7 @@ import org.sonar.api.resources.Project;
 import java.io.File;
 import java.io.IOException;
 
+import static org.fest.assertions.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 public class ElixirMeasureSensorTest {
@@ -52,12 +53,10 @@ public class ElixirMeasureSensorTest {
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
     private File baseDir;
-    private ResourcePerspectives perspectives;
 
     @Before
     public void prepare() throws IOException {
         baseDir = temp.newFolder();
-        perspectives = mock(ResourcePerspectives.class);
         fileSystem = new DefaultFileSystem();
         fileSystem.setBaseDir(baseDir);
         sensor = new ElixirMeasureSensor(fileSystem);
@@ -69,16 +68,18 @@ public class ElixirMeasureSensorTest {
         File source = new File(baseDir, fileName);
         FileUtils.write(source, IOUtils.toString(getClass().getResourceAsStream("/" + fileName)));
         DefaultInputFile inputFile = new DefaultInputFile(fileName).setLanguage(Elixir.KEY);
-        inputFile.setAbsolutePath(new File(baseDir,inputFile.relativePath()).getAbsolutePath());
+        inputFile.setAbsolutePath(new File(baseDir, inputFile.relativePath()).getAbsolutePath());
         fileSystem.add(inputFile);
+
+        assertThat(sensor.shouldExecuteOnProject(project)).isTrue();
 
         sensor.analyse(project, context);
 
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.LINES), eq(21.0));
+        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.LINES), eq(33.0));
         verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.NCLOC), eq(14.0));
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.COMMENT_LINES), eq(3.0));
+        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.COMMENT_LINES), eq(13.0));
         verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.CLASSES), eq(1.0));
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.FUNCTIONS), eq(4.0));
+        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.FUNCTIONS), eq(6.0));
         verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.PUBLIC_API), eq(5.0));
         verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.PUBLIC_UNDOCUMENTED_API), eq(2.0));
     }

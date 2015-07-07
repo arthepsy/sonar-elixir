@@ -3,6 +3,8 @@ defmodule Docs do
 
 	@doc """
 	function doc1
+
+	documentation
 	"""
 	def doc1() do
 	end
@@ -15,7 +17,17 @@ defmodule Docs do
 	def doc3() do
 	end
 
+	@doc "private function doc4"
+	defp doc4() do
+	end
+
 	@doc nil 
-	def doc4() do
+	def doc5() do
+	end
+
+	# very
+	#  very
+	#   private function doc6
+	defp doc6() do
 	end
 end

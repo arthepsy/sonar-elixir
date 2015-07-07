@@ -21,18 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package eu.arthepsy.sonar.plugins.elixir;
+package eu.arthepsy.sonar.plugins.elixir.language;
 
-import com.google.common.collect.ImmutableList;
-import org.sonar.api.config.PropertyDefinition;
+import org.junit.Test;
 
-import java.util.List;
+import static org.fest.assertions.Assertions.assertThat;
 
-public final class ElixirConfiguration {
-    public static final String LOG_PREFIX = "[elixir] ";
-
-    public static List<PropertyDefinition> getPropertyDefinitions() {
-        ImmutableList.Builder<PropertyDefinition> properties = ImmutableList.builder();
-        return properties.build();
+public class ElixirTest {
+    @Test
+    public void test() {
+        Elixir language = new Elixir();
+        assertThat(language.getKey()).isEqualTo("elixir");
+        assertThat(language.getName()).isEqualTo("Elixir");
+        assertThat(language.getFileSuffixes()).containsOnly("ex", "exs");
     }
 }

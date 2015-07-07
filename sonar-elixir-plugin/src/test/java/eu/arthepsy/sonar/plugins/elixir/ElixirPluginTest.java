@@ -23,16 +23,13 @@
  */
 package eu.arthepsy.sonar.plugins.elixir;
 
-import com.google.common.collect.ImmutableList;
-import org.sonar.api.config.PropertyDefinition;
+import org.junit.Test;
 
-import java.util.List;
+import static org.fest.assertions.Assertions.assertThat;
 
-public final class ElixirConfiguration {
-    public static final String LOG_PREFIX = "[elixir] ";
-
-    public static List<PropertyDefinition> getPropertyDefinitions() {
-        ImmutableList.Builder<PropertyDefinition> properties = ImmutableList.builder();
-        return properties.build();
+public class ElixirPluginTest {
+    @Test
+    public void testExtensionCount() {
+        assertThat(new ElixirPlugin().getExtensions().size()).isEqualTo(3);
     }
 }

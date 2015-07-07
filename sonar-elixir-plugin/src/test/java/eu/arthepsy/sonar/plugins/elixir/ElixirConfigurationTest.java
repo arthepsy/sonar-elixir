@@ -23,16 +23,20 @@
  */
 package eu.arthepsy.sonar.plugins.elixir;
 
-import com.google.common.collect.ImmutableList;
-import org.sonar.api.config.PropertyDefinition;
+import eu.arthepsy.sonar.plugins.elixir.util.ClassDefinition;
 
-import java.util.List;
+import org.junit.Test;
 
-public final class ElixirConfiguration {
-    public static final String LOG_PREFIX = "[elixir] ";
+import static org.fest.assertions.Assertions.assertThat;
 
-    public static List<PropertyDefinition> getPropertyDefinitions() {
-        ImmutableList.Builder<PropertyDefinition> properties = ImmutableList.builder();
-        return properties.build();
+public class ElixirConfigurationTest {
+    @Test
+    public void testClassDefinition() {
+        ClassDefinition.testFinalClassDefinition(ElixirConfiguration.class);
+    }
+
+    @Test
+    public void testPropertyCount() {
+        assertThat(ElixirConfiguration.getPropertyDefinitions().size()).isEqualTo(0);
     }
 }

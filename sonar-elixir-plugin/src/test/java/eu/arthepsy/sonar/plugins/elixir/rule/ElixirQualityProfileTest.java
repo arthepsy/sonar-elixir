@@ -21,18 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package eu.arthepsy.sonar.plugins.elixir;
+package eu.arthepsy.sonar.plugins.elixir.rule;
 
-import com.google.common.collect.ImmutableList;
-import org.sonar.api.config.PropertyDefinition;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.sonar.api.profiles.RulesProfile;
+import org.sonar.api.utils.ValidationMessages;
 
-import java.util.List;
+import static org.fest.assertions.Assertions.assertThat;
 
-public final class ElixirConfiguration {
-    public static final String LOG_PREFIX = "[elixir] ";
+public class ElixirQualityProfileTest {
+    private ElixirQualityProfile profile;
+    private ValidationMessages validationMessages;
 
-    public static List<PropertyDefinition> getPropertyDefinitions() {
-        ImmutableList.Builder<PropertyDefinition> properties = ImmutableList.builder();
-        return properties.build();
+    @Before
+    public void prepare() {
+        profile = Mockito.spy(new ElixirQualityProfile());
+        validationMessages = ValidationMessages.create();
+    }
+
+    @Test
+    public void testRulesCount() {
+        RulesProfile rulesProfile =  profile.createProfile(validationMessages);
+        assertThat(rulesProfile.getActiveRules().size()).isEqualTo(0);
     }
 }
