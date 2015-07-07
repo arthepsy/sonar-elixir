@@ -1,5 +1,5 @@
 /*
- * Elixir
+ * SonarQube Elixir plugin
  * Copyright (C) 2015 Andris Raugulis
  * moo@arthepsy.eu
  *
