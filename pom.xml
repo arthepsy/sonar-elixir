@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.codehaus.sonar-plugins</groupId>
+        <artifactId>parent</artifactId>
+        <version>19</version>
+    </parent>
+
+    <modules>
+        <module>sonar-elixir-plugin</module>
+    </modules>
+    
+    <groupId>eu.arthepsy.sonar.plugins</groupId>
+    <artifactId>elixir</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>SonarQube Elixir</name>
+    <url></url>
+    <organization>
+        <name>${dev.name}</name>
+    </organization>
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>http://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>${dev.nick}</id>
+            <name>${dev.name}</name>
+        </developer>
+    </developers>
+    <issueManagement>
+        <system></system>
+        <url></url>
+    </issueManagement>
+    <scm>
+        <connection>scm:git:</connection>
+        <developerConnection>scm:git:</developerConnection>
+        <url></url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <properties>
+        <dev.nick>arthepsy</dev.nick>
+        <dev.name>Andris Raugulis</dev.name>
+        <dev.mail>moo@arthepsy.eu</dev.mail>
+        <sonar.version>4.5</sonar.version>
+        <maven.buildNumber.timestampFormat>{0,date,yyyy-MM-dd HH:mm:ssa}</maven.buildNumber.timestampFormat>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.codehaus.sonar</groupId>
+                <artifactId>sonar-plugin-api</artifactId>
+                <version>${sonar.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.sonar</groupId>
+                <artifactId>sonar-core</artifactId>
+                <version>${sonar.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- unit tests -->
+            <dependency>
+                <groupId>org.codehaus.sonar</groupId>
+                <artifactId>sonar-testing-harness</artifactId>
+                <version>${sonar.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-all</artifactId>
+                <version>1.10.19</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.3</version>
+                    <configuration>
+                        <compilerArgs>
+                            <arg>-Xlint:unchecked</arg>
+                            <arg>-Xlint:deprecation</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <!-- use MIT license -->
+            <plugin>
+                <groupId>com.mycila.maven-license-plugin</groupId>
+                <artifactId>maven-license-plugin</artifactId>
+                <version>1.9.0</version>
+                <configuration>
+                    <header>org/sonar/plugins/licenseheaders/MIT.txt</header>
+                    <properties>
+                        <year>2015</year>
+                        <owner>${dev.name}</owner>
+                        <mailto>${dev.mail}</mailto>
+                    </properties>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
