@@ -30,4 +30,8 @@ defmodule Docs do
 	#   private function doc6
 	defp doc6() do
 	end
+
+	@typedoc "type doc example"
+	@type doc7 :: any
+
 end

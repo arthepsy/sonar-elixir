@@ -75,9 +75,9 @@ public class ElixirMeasureSensorTest {
 
         sensor.analyse(project, context);
 
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.LINES), eq(33.0));
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.NCLOC), eq(14.0));
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.COMMENT_LINES), eq(13.0));
+        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.LINES), eq(37.0));
+        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.NCLOC), eq(15.0));
+        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.COMMENT_LINES), eq(14.0));
         verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.CLASSES), eq(1.0));
         verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.FUNCTIONS), eq(6.0));
         verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.PUBLIC_API), eq(5.0));

@@ -51,12 +51,6 @@ public class ElixirMeasureSensor implements Sensor {
     private final FileSystem fileSystem;
     private final FilePredicate mainFilePredicate;
 
-    private final Pattern defPattern = Pattern.compile("^\\s*def(|p|module|struct)\\s(.*)$");
-    private final Matcher defMatcher = defPattern.matcher("");
-    private final Pattern heredocPattern = Pattern.compile("^.*\"\"\"\\s*$");
-    private final Matcher heredocMatcher = heredocPattern.matcher("");
-    private final Pattern docPattern = Pattern.compile("^\\s*@(moduledoc|doc)([\"\\s].*)$");
-    private final Matcher docMatcher = docPattern.matcher("");
 
     public ElixirMeasureSensor(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
@@ -79,105 +73,32 @@ public class ElixirMeasureSensor implements Sensor {
     }
 
     private void processMainFile(InputFile inputFile, SensorContext context) {
-        int lineCount = 0;
-        int emptyLineCount = 0;
-        int commentLineCount = 0;
-        int classCount = 0;
-        int publicFunctionCount = 0;
-        int privateFunctionCount = 0;
-        int documentedClassCount = 0;
-        int documentedPrivateFunctionCount = 0;
-        int documentedPublicFunctionCount = 0;
-        boolean hasDoc = false;
-        boolean inClass = false;
-
-        List<String> lines = null;
+        List<String> lines;
         try {
             lines = Files.readAllLines(Paths.get(inputFile.absolutePath()), fileSystem.encoding());
-            lineCount = lines.size();
-            for (int i = 0; i < lineCount; i++) {
-                String line = lines.get(i);
-                if (StringUtils.isBlank(line)) {
-                    emptyLineCount++;
-                }
-                docMatcher.reset(line);
-                boolean inDoc = docMatcher.find();
-                if (inDoc) {
-                    commentLineCount++;
-                    String docText = docMatcher.group(2).trim();
-                    if (! (StringUtils.equalsIgnoreCase(docText, "false") || StringUtils.equalsIgnoreCase(docText, "nil"))) {
-                        switch (docMatcher.group(1)) {
-                            case "doc":
-                                hasDoc = true;
-                                break;
-                            case "moduledoc":
-                                if (inClass) {
-                                    documentedClassCount++;
-                                }
-                                break;
-                        }
-                    }
-                }
-                heredocMatcher.reset(line);
-                if (heredocMatcher.find()) {
-                    while (i < lineCount - 1) {
-                        if (inDoc) {
-                            commentLineCount++;
-                        }
-                        i++;
-                        line = lines.get(i);
-                        if (line.matches("^\\s*\"\"\"\\s*$")) {
-                            break;
-                        }
-                    }
-                    continue;
-                }
-
-                defMatcher.reset(line);
-                if (defMatcher.find()) {
-                    switch (defMatcher.group(1)) {
-                        case "module":
-                            classCount++;
-                            inClass = true;
-                            break;
-                        case "":
-                            publicFunctionCount++;
-                            if (hasDoc) {
-                                documentedPublicFunctionCount++;
-                            }
-                            break;
-                        case "p":
-                            privateFunctionCount++;
-                            if (hasDoc) {
-                                documentedPrivateFunctionCount++;
-                            }
-                            break;
-                    }
-                    hasDoc = false;
-                }
-                if (line.matches("^\\s*#.*$")) {
-                    commentLineCount++;
-                }
-            }
         } catch (IOException e) {
             LOG.warn(LOG_PREFIX + "could not process file: " + inputFile.toString());
+            return;
         }
-        if (lines != null) {
-            LOG.debug(LOG_PREFIX + "processing file: " + inputFile.toString());
-            context.saveMeasure(inputFile, CoreMetrics.LINES, (double) lineCount);
-            context.saveMeasure(inputFile, CoreMetrics.NCLOC, (double)(lineCount - emptyLineCount - commentLineCount));
-            context.saveMeasure(inputFile, CoreMetrics.COMMENT_LINES, (double)commentLineCount);
+        ElixirParser parser = new ElixirParser();
+        parser.parse(lines);
 
-            double publicApi = publicFunctionCount + classCount;
-            double documentedApi = documentedPublicFunctionCount + documentedClassCount;
-            double undocumentedApi = publicApi - documentedApi;
-            double documentedApiDensity = (publicApi == 0 ? 100.0 : ParsingUtils.scaleValue(documentedApi / publicApi * 100, 2));
-            context.saveMeasure(inputFile, CoreMetrics.PUBLIC_API, publicApi);
-            context.saveMeasure(inputFile, CoreMetrics.PUBLIC_UNDOCUMENTED_API, undocumentedApi);
-            context.saveMeasure(inputFile, CoreMetrics.PUBLIC_DOCUMENTED_API_DENSITY, documentedApiDensity);
+        LOG.debug(LOG_PREFIX + "processing file: " + inputFile.toString());
+        double linesOfCode = parser.getLineCount() - parser.getEmptyLineCount() - parser.getCommentLineCount();
+        context.saveMeasure(inputFile, CoreMetrics.LINES, (double)parser.getLineCount());
+        context.saveMeasure(inputFile, CoreMetrics.NCLOC, (double)linesOfCode);
+        context.saveMeasure(inputFile, CoreMetrics.COMMENT_LINES, (double)parser.getCommentLineCount());
 
-            context.saveMeasure(inputFile, CoreMetrics.CLASSES, (double)classCount);
-            context.saveMeasure(inputFile, CoreMetrics.FUNCTIONS, (double)(publicFunctionCount + privateFunctionCount));
-        }
+        double publicApi = parser.getPublicFunctionCount() + parser.getClassCount();
+        double documentedApi = parser.getDocumentedPublicFunctionCount() + parser.getDocumentedClassCount();
+        double undocumentedApi = publicApi - documentedApi;
+        double documentedApiDensity = (publicApi == 0 ? 100.0 : ParsingUtils.scaleValue(documentedApi / publicApi * 100, 2));
+        context.saveMeasure(inputFile, CoreMetrics.PUBLIC_API, publicApi);
+        context.saveMeasure(inputFile, CoreMetrics.PUBLIC_UNDOCUMENTED_API, undocumentedApi);
+        context.saveMeasure(inputFile, CoreMetrics.PUBLIC_DOCUMENTED_API_DENSITY, documentedApiDensity);
+
+        double functionCount = parser.getPublicFunctionCount() + parser.getPrivateFunctionCount();
+        context.saveMeasure(inputFile, CoreMetrics.CLASSES, (double)parser.getClassCount());
+        context.saveMeasure(inputFile, CoreMetrics.FUNCTIONS, (double)(functionCount));
     }
 }
