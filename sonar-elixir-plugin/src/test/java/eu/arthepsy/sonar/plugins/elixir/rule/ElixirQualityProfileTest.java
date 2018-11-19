@@ -23,27 +23,34 @@
  */
 package eu.arthepsy.sonar.plugins.elixir.rule;
 
+import eu.arthepsy.sonar.plugins.elixir.language.Elixir;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.sonar.api.profiles.RulesProfile;
-import org.sonar.api.utils.ValidationMessages;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.sonar.api.server.profile.BuiltInQualityProfilesDefinition;
 
-import static org.fest.assertions.Assertions.assertThat;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 
 public class ElixirQualityProfileTest {
     private ElixirQualityProfile profile;
-    private ValidationMessages validationMessages;
+
+    @Mock
+    BuiltInQualityProfilesDefinition.Context context;
+
+    @Mock
+    BuiltInQualityProfilesDefinition.NewBuiltInQualityProfile newProfile;
 
     @Before
     public void prepare() {
-        profile = Mockito.spy(new ElixirQualityProfile());
-        validationMessages = ValidationMessages.create();
+        profile = new ElixirQualityProfile();
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
     public void testRulesCount() {
-        RulesProfile rulesProfile =  profile.createProfile(validationMessages);
-        assertThat(rulesProfile.getActiveRules().size()).isEqualTo(0);
+        when(context.createBuiltInQualityProfile(eq("Sonar way"), eq(Elixir.KEY))).thenReturn(newProfile);
+        profile.define(context);
     }
 }

@@ -23,24 +23,15 @@
  */
 package eu.arthepsy.sonar.plugins.elixir;
 
-import com.google.common.collect.ImmutableList;
 import eu.arthepsy.sonar.plugins.elixir.language.Elixir;
 import eu.arthepsy.sonar.plugins.elixir.language.ElixirMeasureSensor;
 import eu.arthepsy.sonar.plugins.elixir.rule.ElixirQualityProfile;
-import org.sonar.api.SonarPlugin;
+import org.sonar.api.Plugin;
 
-import java.util.List;
-
-public class ElixirPlugin extends SonarPlugin {
+public class ElixirPlugin implements Plugin {
 
     @Override
-    public List getExtensions() {
-        ImmutableList.Builder<Object> builder = ImmutableList.builder();
-        builder.addAll(ElixirConfiguration.getPropertyDefinitions());
-        builder.add(Elixir.class);
-        builder.add(ElixirQualityProfile.class);
-        builder.add(ElixirMeasureSensor.class);
-        return builder.build();
+    public void define(Context context) {
+        context.addExtensions(Elixir.class, ElixirQualityProfile.class, ElixirMeasureSensor.class);
     }
-
 }

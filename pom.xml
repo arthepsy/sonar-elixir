@@ -4,12 +4,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.codehaus.sonar-plugins</groupId>
-        <artifactId>parent</artifactId>
-        <version>19</version>
-    </parent>
-
     <modules>
         <module>sonar-elixir-plugin</module>
     </modules>
@@ -51,7 +45,7 @@
         <dev.nick>arthepsy</dev.nick>
         <dev.name>Andris Raugulis</dev.name>
         <dev.mail>moo@arthepsy.eu</dev.mail>
-        <sonar.version>4.5</sonar.version>
+        <sonar.version>7.3</sonar.version>
         <maven.buildNumber.timestampFormat>{0,date,yyyy-MM-dd HH:mm:ssa}</maven.buildNumber.timestampFormat>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -59,20 +53,20 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.codehaus.sonar</groupId>
+                <groupId>org.sonarsource.sonarqube</groupId>
                 <artifactId>sonar-plugin-api</artifactId>
                 <version>${sonar.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>org.codehaus.sonar</groupId>
+                <groupId>org.sonarsource.sonarqube</groupId>
                 <artifactId>sonar-core</artifactId>
                 <version>${sonar.version}</version>
                 <scope>provided</scope>
             </dependency>
             <!-- unit tests -->
             <dependency>
-                <groupId>org.codehaus.sonar</groupId>
+                <groupId>org.sonarsource.sonarqube</groupId>
                 <artifactId>sonar-testing-harness</artifactId>
                 <version>${sonar.version}</version>
                 <scope>test</scope>
@@ -98,6 +92,8 @@
                             <arg>-Xlint:unchecked</arg>
                             <arg>-Xlint:deprecation</arg>
                         </compilerArgs>
+                        <source>1.8</source>
+                        <target>1.8</target>
                     </configuration>
                 </plugin>
             </plugins>
@@ -133,6 +129,18 @@
                         <owner>${dev.name}</owner>
                         <mailto>${dev.mail}</mailto>
                     </properties>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonarsource.sonar-packaging-maven-plugin</groupId>
+                <artifactId>sonar-packaging-maven-plugin</artifactId>
+                <version>1.17</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <pluginClass>eu.arthepsy.sonar.plugins.elixir.ElixirPlugin</pluginClass>
+                    <pluginIssueTrackerUrl>https://github.com/arthepsy/sonar-elixir</pluginIssueTrackerUrl>
+                    <pluginSourcesUrl>https://github.com/arthepsy/sonar-elixir</pluginSourcesUrl>
+                    <pluginUrl>https://github.com/arthepsy/sonar-elixir</pluginUrl>
                 </configuration>
             </plugin>
         </plugins>

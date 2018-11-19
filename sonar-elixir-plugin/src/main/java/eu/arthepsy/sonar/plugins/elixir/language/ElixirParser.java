@@ -36,9 +36,6 @@ public class ElixirParser {
     private int classCount = 0;
     private int publicFunctionCount = 0;
     private int privateFunctionCount = 0;
-    private int documentedClassCount = 0;
-    private int documentedPrivateFunctionCount = 0;
-    private int documentedPublicFunctionCount = 0;
 
     private final Pattern defPattern = Pattern.compile("^\\s*def(|p|module|struct)\\s(.*)$");
     private final Matcher defMatcher = defPattern.matcher("");
@@ -47,29 +44,20 @@ public class ElixirParser {
     private final Pattern docPattern = Pattern.compile("^\\s*@(doc|moduledoc|typedoc)([\"\\s].*)$");
     private final Matcher docMatcher = docPattern.matcher("");
 
-    private boolean hasDoc = false;
-    private boolean inClass = false;
+    ElixirParser() { }
 
-    public ElixirParser() { }
+    int getLineCount() { return lineCount; }
+    int getEmptyLineCount() { return emptyLineCount; }
+    int getCommentLineCount() { return commentLineCount; }
+    int getClassCount() { return classCount; }
+    int getPublicFunctionCount() { return publicFunctionCount; }
+    int getPrivateFunctionCount() { return privateFunctionCount; }
 
-    public int getLineCount() { return lineCount; }
-    public int getEmptyLineCount() { return emptyLineCount; }
-    public int getCommentLineCount() { return commentLineCount; }
-    public int getClassCount() { return classCount; }
-    public int getPublicFunctionCount() { return publicFunctionCount; }
-    public int getPrivateFunctionCount() { return privateFunctionCount; }
-    public int getDocumentedClassCount() { return documentedClassCount; }
-    public int getDocumentedPublicFunctionCount() { return documentedPublicFunctionCount; }
-    public int getDocumentedPrivateFunctionCount() { return documentedPrivateFunctionCount; }
-
-    public void parse(List<String> lines) {
+    void parse(List<String> lines) {
         this.parseLines(lines);
     }
 
     private void parseLines(List<String> lines) {
-        hasDoc = false;
-        inClass = false;
-
         lineCount = lines.size();
         for (int i = 0; i < lineCount; i++) {
             String line = lines.get(i);
@@ -80,21 +68,6 @@ public class ElixirParser {
             boolean inDoc = docMatcher.find();
             if (inDoc) {
                 commentLineCount++;
-                String docHead = docMatcher.group(2).trim();
-                if (! (StringUtils.equalsIgnoreCase(docHead, "false") || StringUtils.equalsIgnoreCase(docHead, "nil"))) {
-                    switch (docMatcher.group(1)) {
-                        case "doc":
-                            hasDoc = true;
-                            break;
-                        case "moduledoc":
-                            if (inClass) {
-                                documentedClassCount++;
-                            }
-                            break;
-                        case "typedoc":
-                            break;
-                    }
-                }
             }
             heredocMatcher.reset(line);
             if (heredocMatcher.find()) {
@@ -116,22 +89,14 @@ public class ElixirParser {
                 switch (defMatcher.group(1)) {
                     case "module":
                         classCount++;
-                        inClass = true;
                         break;
                     case "":
                         publicFunctionCount++;
-                        if (hasDoc) {
-                            documentedPublicFunctionCount++;
-                        }
                         break;
                     case "p":
                         privateFunctionCount++;
-                        if (hasDoc) {
-                            documentedPrivateFunctionCount++;
-                        }
                         break;
                 }
-                hasDoc = false;
             }
             if (line.matches("^\\s*#.*$")) {
                 commentLineCount++;

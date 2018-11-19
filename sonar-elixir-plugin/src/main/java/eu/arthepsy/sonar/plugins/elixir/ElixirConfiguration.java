@@ -23,16 +23,6 @@
  */
 package eu.arthepsy.sonar.plugins.elixir;
 
-import com.google.common.collect.ImmutableList;
-import org.sonar.api.config.PropertyDefinition;
-
-import java.util.List;
-
 public final class ElixirConfiguration {
     public static final String LOG_PREFIX = "[elixir] ";
-
-    public static List<PropertyDefinition> getPropertyDefinitions() {
-        ImmutableList.Builder<PropertyDefinition> properties = ImmutableList.builder();
-        return properties.build();
-    }
 }
