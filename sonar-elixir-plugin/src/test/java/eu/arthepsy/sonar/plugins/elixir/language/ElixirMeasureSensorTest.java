@@ -23,64 +23,100 @@
  */
 package eu.arthepsy.sonar.plugins.elixir.language;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.sonar.api.batch.fs.FilePredicate;
+import org.sonar.api.batch.fs.FilePredicates;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.internal.DefaultFileSystem;
+import org.sonar.api.batch.fs.internal.DefaultIndexedFile;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
-import org.sonar.api.batch.SensorContext;
-import org.sonar.api.component.ResourcePerspectives;
+import org.sonar.api.batch.measure.Metric;
+import org.sonar.api.batch.measure.MetricFinder;
+import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.batch.sensor.measure.NewMeasure;
 import org.sonar.api.measures.CoreMetrics;
-import org.sonar.api.resources.Project;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
-import static org.fest.assertions.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 public class ElixirMeasureSensorTest {
 
-    private final Project project = new Project("project");
-    private SensorContext context = mock(SensorContext.class);
+    @Mock
+    private SensorContext context;
+
+    @Mock
     private DefaultFileSystem fileSystem;
+
+    @Mock
+    private MetricFinder metricFinder;
+
+    @Mock
+    private DefaultIndexedFile indexedFile;
+
+    @Mock
+    private Consumer<DefaultInputFile> metadataGenerator;
+
+    @Mock
+    private FilePredicates filePredicates;
+
+    @Mock
+    private Metric<Serializable> metric;
+
+    @Mock
+    private NewMeasure<Serializable> newMeasure;
+
     private ElixirMeasureSensor sensor;
 
-    @Rule
-    public TemporaryFolder temp = new TemporaryFolder();
-    private File baseDir;
-
     @Before
-    public void prepare() throws IOException {
-        baseDir = temp.newFolder();
-        fileSystem = new DefaultFileSystem();
-        fileSystem.setBaseDir(baseDir);
-        sensor = new ElixirMeasureSensor(fileSystem);
+    public void prepare() {
+        MockitoAnnotations.initMocks(this);
+
+        when(fileSystem.predicates()).thenReturn(filePredicates);
+        sensor = new ElixirMeasureSensor(fileSystem, metricFinder);
     }
 
     @Test
     public void testDocAnnotation() throws IOException {
         String fileName = "test_doc.ex";
-        File source = new File(baseDir, fileName);
-        FileUtils.write(source, IOUtils.toString(getClass().getResourceAsStream("/" + fileName)));
-        DefaultInputFile inputFile = new DefaultInputFile(fileName).setLanguage(Elixir.KEY);
-        inputFile.setAbsolutePath(new File(baseDir, inputFile.relativePath()).getAbsolutePath());
-        fileSystem.add(inputFile);
+        InputStream testInputStream = getClass().getResourceAsStream("/" + fileName);
 
-        assertThat(sensor.shouldExecuteOnProject(project)).isTrue();
+        String testFileContents = IOUtils.toString(testInputStream, Charset.defaultCharset());
+        DefaultInputFile inputFile = new DefaultInputFile(indexedFile, metadataGenerator, testFileContents);
+        inputFile.setCharset(Charset.defaultCharset());
+        when(indexedFile.language()).thenReturn(Elixir.KEY);
 
-        sensor.analyse(project, context);
+        List<InputFile> inputFiles = new ArrayList<>();
+        inputFiles.add(inputFile);
+        when(fileSystem.inputFiles(any(FilePredicate.class))).thenReturn(inputFiles);
 
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.LINES), eq(37.0));
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.NCLOC), eq(15.0));
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.COMMENT_LINES), eq(14.0));
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.CLASSES), eq(1.0));
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.FUNCTIONS), eq(6.0));
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.PUBLIC_API), eq(5.0));
-        verify(context).saveMeasure(any(InputFile.class), eq(CoreMetrics.PUBLIC_UNDOCUMENTED_API), eq(2.0));
+        when(metricFinder.findByKey(CoreMetrics.LINES_KEY)).thenReturn(metric);
+        when(metricFinder.findByKey(CoreMetrics.NCLOC_KEY)).thenReturn(metric);
+        when(metricFinder.findByKey(CoreMetrics.COMMENT_LINES_KEY)).thenReturn(metric);
+        when(metricFinder.findByKey(CoreMetrics.FUNCTIONS_KEY)).thenReturn(metric);
+        when(metricFinder.findByKey(CoreMetrics.CLASSES_KEY)).thenReturn(metric);
+        when(context.newMeasure()).thenReturn(newMeasure);
+        when(newMeasure.forMetric(Matchers.any())).thenReturn(newMeasure);
+        when(newMeasure.on(any(InputFile.class))).thenReturn(newMeasure);
+
+        sensor.execute(context);
+
+        verify(newMeasure).withValue(eq(37));
+        verify(newMeasure).withValue(eq(15));
+        verify(newMeasure).withValue(eq(14));
+        verify(newMeasure).withValue(eq(1));
+        verify(newMeasure).withValue(eq(6));
     }
 }

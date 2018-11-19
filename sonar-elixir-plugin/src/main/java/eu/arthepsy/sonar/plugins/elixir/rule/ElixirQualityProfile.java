@@ -24,18 +24,15 @@
 package eu.arthepsy.sonar.plugins.elixir.rule;
 
 import eu.arthepsy.sonar.plugins.elixir.language.Elixir;
-import org.sonar.api.profiles.ProfileDefinition;
-import org.sonar.api.profiles.RulesProfile;
-import org.sonar.api.utils.ValidationMessages;
+import org.sonar.api.server.profile.BuiltInQualityProfilesDefinition;
 
-public class ElixirQualityProfile extends ProfileDefinition {
+public class ElixirQualityProfile implements BuiltInQualityProfilesDefinition {
     private static final String DEFAULT_PROFILE = "Sonar way";
 
     @Override
-    public RulesProfile createProfile(ValidationMessages validationMessages) {
-        final RulesProfile profile = RulesProfile.create(DEFAULT_PROFILE, Elixir.KEY);
-        //parser.parse(profile);
-        //parser.log(LoggerFactory.getLogger(ScapegoatQualityProfile.class), ScapegoatConfiguration.LOG_PREFIX);
-        return profile;
+    public void define(Context context) {
+        NewBuiltInQualityProfile profile = context.createBuiltInQualityProfile(DEFAULT_PROFILE, Elixir.KEY);
+        profile.setDefault(true);
+        profile.done();
     }
 }

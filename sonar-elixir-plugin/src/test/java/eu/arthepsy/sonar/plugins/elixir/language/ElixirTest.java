@@ -23,16 +23,26 @@
  */
 package eu.arthepsy.sonar.plugins.elixir.language;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 
-import static org.fest.assertions.Assertions.assertThat;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 public class ElixirTest {
     @Test
     public void test() {
         Elixir language = new Elixir();
-        assertThat(language.getKey()).isEqualTo("elixir");
-        assertThat(language.getName()).isEqualTo("Elixir");
-        assertThat(language.getFileSuffixes()).containsOnly("ex", "exs");
+        assertEquals("elixir", language.getKey());
+        assertEquals("Elixir", language.getName());
+        String[] suffixes = language.getFileSuffixes();
+        assert(suffixes.length == 2);
+        final List<String> expectedSuffixes = new ArrayList<>();
+        expectedSuffixes.add("ex");
+        expectedSuffixes.add("exs");
+        assertTrue(Arrays.asList(suffixes).containsAll(expectedSuffixes));
     }
 }

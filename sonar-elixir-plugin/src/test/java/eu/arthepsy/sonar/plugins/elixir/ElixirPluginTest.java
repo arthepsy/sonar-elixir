@@ -23,13 +23,26 @@
  */
 package eu.arthepsy.sonar.plugins.elixir;
 
+import eu.arthepsy.sonar.plugins.elixir.language.Elixir;
+import eu.arthepsy.sonar.plugins.elixir.language.ElixirMeasureSensor;
+import eu.arthepsy.sonar.plugins.elixir.rule.ElixirQualityProfile;
 import org.junit.Test;
+import org.sonar.api.Plugin.Context;
 
-import static org.fest.assertions.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class ElixirPluginTest {
+    private final Context context;
+
+    public ElixirPluginTest() {
+        this.context = mock(Context.class);
+    }
+
     @Test
-    public void testExtensionCount() {
-        assertThat(new ElixirPlugin().getExtensions().size()).isEqualTo(3);
+    public void define() {
+        ElixirPlugin plugin = new ElixirPlugin();
+        plugin.define(context);
+        verify(context).addExtensions(Elixir.class, ElixirQualityProfile.class, ElixirMeasureSensor.class);
     }
 }

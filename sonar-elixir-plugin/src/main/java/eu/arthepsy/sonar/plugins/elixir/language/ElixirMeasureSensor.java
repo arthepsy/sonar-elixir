@@ -24,24 +24,22 @@
 package eu.arthepsy.sonar.plugins.elixir.language;
 
 import eu.arthepsy.sonar.plugins.elixir.ElixirConfiguration;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
-import org.sonar.api.batch.Sensor;
-import org.sonar.api.batch.SensorContext;
+import org.sonar.api.batch.measure.MetricFinder;
+import org.sonar.api.batch.sensor.Sensor;
+import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.batch.sensor.SensorDescriptor;
+import org.sonar.api.batch.sensor.measure.NewMeasure;
 import org.sonar.api.measures.CoreMetrics;
-import org.sonar.api.resources.Project;
-import org.sonar.api.utils.ParsingUtils;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ElixirMeasureSensor implements Sensor {
 
@@ -50,32 +48,33 @@ public class ElixirMeasureSensor implements Sensor {
 
     private final FileSystem fileSystem;
     private final FilePredicate mainFilePredicate;
+    private final MetricFinder metricFinder;
 
 
-    public ElixirMeasureSensor(FileSystem fileSystem) {
+    public ElixirMeasureSensor(FileSystem fileSystem, MetricFinder metricFinder) {
         this.fileSystem = fileSystem;
         this.mainFilePredicate = fileSystem.predicates().and(
                 fileSystem.predicates().hasType(InputFile.Type.MAIN),
                 fileSystem.predicates().hasLanguage(Elixir.KEY));
+        this.metricFinder = metricFinder;
     }
 
     @Override
-    public void analyse(Project project, SensorContext context) {
+    public void describe(SensorDescriptor sensorDescriptor) {
+    }
+
+    public void execute(SensorContext context) {
         LOG.info("[elixir] analyse");
-        for (InputFile file : fileSystem.inputFiles(mainFilePredicate )) {
+        for (InputFile file : fileSystem.inputFiles(mainFilePredicate)) {
             processMainFile(file, context);
         }
-    }
-
-    @Override
-    public boolean shouldExecuteOnProject(Project project) {
-        return fileSystem.hasFiles(mainFilePredicate);
     }
 
     private void processMainFile(InputFile inputFile, SensorContext context) {
         List<String> lines;
         try {
-            lines = Files.readAllLines(Paths.get(inputFile.absolutePath()), fileSystem.encoding());
+            String contents = inputFile.contents();
+            lines = Arrays.asList(contents.split("\\r?\\n"));
         } catch (IOException e) {
             LOG.warn(LOG_PREFIX + "could not process file: " + inputFile.toString());
             return;
@@ -84,21 +83,24 @@ public class ElixirMeasureSensor implements Sensor {
         parser.parse(lines);
 
         LOG.debug(LOG_PREFIX + "processing file: " + inputFile.toString());
-        double linesOfCode = parser.getLineCount() - parser.getEmptyLineCount() - parser.getCommentLineCount();
-        context.saveMeasure(inputFile, CoreMetrics.LINES, (double)parser.getLineCount());
-        context.saveMeasure(inputFile, CoreMetrics.NCLOC, (double)linesOfCode);
-        context.saveMeasure(inputFile, CoreMetrics.COMMENT_LINES, (double)parser.getCommentLineCount());
+        int linesOfCode = parser.getLineCount() - parser.getEmptyLineCount() - parser.getCommentLineCount();
+        saveMeasure(inputFile, context, CoreMetrics.LINES_KEY, parser.getLineCount());
+        saveMeasure(inputFile, context, CoreMetrics.NCLOC_KEY, linesOfCode);
+        saveMeasure(inputFile, context, CoreMetrics.COMMENT_LINES_KEY, parser.getCommentLineCount());
 
-        double publicApi = parser.getPublicFunctionCount() + parser.getClassCount();
-        double documentedApi = parser.getDocumentedPublicFunctionCount() + parser.getDocumentedClassCount();
-        double undocumentedApi = publicApi - documentedApi;
-        double documentedApiDensity = (publicApi == 0 ? 100.0 : ParsingUtils.scaleValue(documentedApi / publicApi * 100, 2));
-        context.saveMeasure(inputFile, CoreMetrics.PUBLIC_API, publicApi);
-        context.saveMeasure(inputFile, CoreMetrics.PUBLIC_UNDOCUMENTED_API, undocumentedApi);
-        context.saveMeasure(inputFile, CoreMetrics.PUBLIC_DOCUMENTED_API_DENSITY, documentedApiDensity);
+        int functionCount = parser.getPublicFunctionCount() + parser.getPrivateFunctionCount();
+        saveMeasure(inputFile, context, CoreMetrics.FUNCTIONS_KEY, functionCount);
+        saveMeasure(inputFile, context, CoreMetrics.CLASSES_KEY, parser.getClassCount());
 
-        double functionCount = parser.getPublicFunctionCount() + parser.getPrivateFunctionCount();
-        context.saveMeasure(inputFile, CoreMetrics.CLASSES, (double)parser.getClassCount());
-        context.saveMeasure(inputFile, CoreMetrics.FUNCTIONS, (double)(functionCount));
+    }
+
+    private void saveMeasure(InputFile inputFile, SensorContext context, String metricKey, Serializable value) {
+        org.sonar.api.batch.measure.Metric<Serializable> metric = metricFinder.findByKey(metricKey);
+        if (metric == null) {
+            throw new IllegalStateException("Unknown metric with key: " + metricKey);
+        }
+        NewMeasure<Serializable> measure = context.newMeasure().forMetric(metric).on(inputFile);
+        measure.withValue(value);
+        measure.save();
     }
 }
